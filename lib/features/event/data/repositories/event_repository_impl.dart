@@ -10,4 +10,7 @@ class EventRepositoryImpl implements EventRepository {
   @override
   Future<List<EventEntity>> getEvents(double lat, double lng, int radiusKm) =>
       dataSource.getEvents(lat, lng, radiusKm);
+
+  @override
+  Future<void> rsvp(EventEntity event) => dataSource.rsvp(event);
 }

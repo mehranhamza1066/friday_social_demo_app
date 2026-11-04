@@ -8,6 +8,7 @@ class EventEntity {
   final double distanceKm;
   final int going;
   final int capacity;
+  final bool isGoing; // did the user press "RSVP"
 
   const EventEntity({
     required this.id,
@@ -19,5 +20,21 @@ class EventEntity {
     required this.distanceKm,
     required this.going,
     required this.capacity,
+    this.isGoing = false,
   });
+
+  EventEntity copyWith({int? going, bool? isGoing}) {
+    return EventEntity(
+      id: id,
+      title: title,
+      venue: venue,
+      start: start,
+      lat: lat,
+      lng: lng,
+      distanceKm: distanceKm,
+      going: going ?? this.going,
+      capacity: capacity,
+      isGoing: isGoing ?? this.isGoing,
+    );
+  }
 }

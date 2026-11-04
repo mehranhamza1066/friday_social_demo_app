@@ -1,63 +1,44 @@
-import 'dart:math';
-
-import 'package:geolocator/geolocator.dart';
-
+import '../../../../core/event_full_exception.dart';
 import '../../domain/entities/event_entity.dart';
 
-// Demo events. They are placed around the given point, so there are always
-// events near the user (or near the chosen city), at different distances.
+// demo events, there is no real server
 class EventLocalDataSource {
-  static const _venues = [
-    'City Hall',
-    'Riverside Park',
-    'Central Library',
-    'Art Gallery',
-    'Sports Arena',
-    'Old Market',
-    'Music Hall',
-    'Tech Hub',
-  ];
-  static const _distancesKm = [2.0, 4.0, 7.0, 9.0, 12.0, 18.0, 24.0, 40.0];
-  static const _hours = [9, 12, 15, 18];
+  List<String> venues = ['City Hall', 'Park', 'Library', 'Gallery', 'Arena', 'Market', 'Music Hall', 'Tech Hub'];
+  List<double> distances = [2, 4, 7, 9, 12, 18, 24, 40];
 
-  Future<List<EventEntity>> getEvents(
-    double lat,
-    double lng,
-    int radiusKm,
-  ) async {
-    final today = DateTime.now();
-    final events = <EventEntity>[];
+  Future<List<EventEntity>> getEvents(double lat, double lng, int radiusKm) async {
+    List<EventEntity> events = [];
+    DateTime today = DateTime.now();
 
-    for (var offset = -30; offset <= 30; offset++) {
-      final day = DateTime(today.year, today.month, today.day + offset);
-      final count = (day.day % 4) + 1; // 1, 2, 3 or 4 events
-      for (var i = 0; i < count; i++) {
-        final k = (day.day + i) % _venues.length;
-        final angle = k * pi / 4;
-        final km = _distancesKm[k];
-        final eventLat = lat + km * cos(angle) / 111;
-        final eventLng = lng + km * sin(angle) / (111 * cos(lat * pi / 180));
+    for (int d = -30; d <= 30; d++) {
+      DateTime day = DateTime(today.year, today.month, today.day + d);
 
-        final distanceKm =
-            Geolocator.distanceBetween(lat, lng, eventLat, eventLng) / 1000;
-        if (distanceKm > radiusKm) continue;
+      // every day has 1, 2, 3 or 4 events
+      for (int i = 0; i < (day.day % 4) + 1; i++) {
+        int k = (day.day + i) % 8;
+        if (distances[k] > radiusKm) continue; // too far
 
-        final capacity = 50 + k * 25;
-        events.add(
-          EventEntity(
-            id: '${day.toIso8601String()}-$i',
-            title: 'Event ${i + 1}',
-            venue: _venues[k],
-            start: DateTime(day.year, day.month, day.day, _hours[i]),
-            lat: eventLat,
-            lng: eventLng,
-            distanceKm: distanceKm,
-            going: (day.day * 7 + i * 13) % (capacity + 1),
-            capacity: capacity,
-          ),
-        );
+        int capacity = 50 + k * 25;
+        int going = i == 3 ? capacity : (day.day * 7 + i * 13) % capacity; // 4th one is full
+        events.add(EventEntity(
+          id: '${day.toIso8601String()}-$i',
+          title: 'Event ${i + 1}',
+          venue: venues[k],
+          start: DateTime(day.year, day.month, day.day, 9 + i * 3),
+          lat: lat + distances[k] / 111, // 1 degree is about 111 km
+          lng: lng,
+          distanceKm: distances[k],
+          going: going,
+          capacity: capacity,
+        ));
       }
     }
     return events;
+  }
+
+  // fake server, says full when there is no space
+  Future<void> rsvp(EventEntity event) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (event.going >= event.capacity) throw EventFullException();
   }
 }

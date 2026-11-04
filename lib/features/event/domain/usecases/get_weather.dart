@@ -6,13 +6,13 @@ class GetWeather {
 
   GetWeather(this.repository);
 
-  // The weather of the 7 days (Monday to Sunday) that hold [day].
+  // One call for the whole month that holds [day], not one call per day.
   // The weather API only answers for 90 days back and 15 days ahead,
-  // so we cut the week to those days.
+  // so we cut the month to those days.
   Future<List<WeatherEntity>> call(DateTime day, double lat, double lng) {
     final now = DateTime.now();
-    var from = DateTime(day.year, day.month, day.day - (day.weekday - 1));
-    var to = DateTime(from.year, from.month, from.day + 6);
+    var from = DateTime(day.year, day.month, 1);
+    var to = DateTime(day.year, day.month + 1, 0);
     final first = now.subtract(const Duration(days: 90));
     final last = now.add(const Duration(days: 15));
     if (from.isBefore(first)) from = first;

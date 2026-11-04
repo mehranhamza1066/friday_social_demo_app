@@ -1,71 +1,94 @@
 import 'package:get/get.dart';
 
+import '../../../../core/event_full_exception.dart';
 import '../../../../core/location_service.dart';
 import '../../domain/entities/city_entity.dart';
 import '../../domain/entities/event_entity.dart';
 import '../../domain/entities/weather_entity.dart';
 import '../../domain/usecases/get_events.dart';
 import '../../domain/usecases/get_weather.dart';
+import '../../domain/usecases/rsvp_event.dart';
 
 class EventController extends GetxController {
   final GetWeather getWeather;
   final GetEvents getEvents;
+  final RsvpEvent rsvpEvent;
 
-  EventController(this.getWeather, this.getEvents);
+  EventController(this.getWeather, this.getEvents, this.rsvpEvent);
 
   final selectedDate = DateTime.now().obs;
   final focusedDay = DateTime.now().obs;
-  final radiusKm = 10.obs; // 5, 10 or 25
-  final usingCity = false.obs; // true when the location is not allowed
+  final radiusKm = 10.obs;
+  final usingCity = false.obs; // true if location is not allowed
   final city = cities.first.obs;
   final events = <EventEntity>[].obs;
-  final weathers = <String, WeatherEntity>{}.obs; // key is dayKey(date)
+  final weathers = <String, WeatherEntity>{}.obs;
 
-  double _lat = cities.first.lat;
-  double _lng = cities.first.lng;
+  List<String> loadedMonths = []; // like "2026-11"
+  double lat = cities.first.lat;
+  double lng = cities.first.lng;
 
   @override
   void onInit() {
     super.onInit();
-    _start();
+    start();
   }
 
-  Future<void> _start() async {
-    final location = await LocationService.getUserLocation();
-    if (location == null) {
+  Future<void> start() async {
+    final position = await LocationService.getUserLocation();
+    if (position == null) {
       usingCity.value = true;
-      _lat = city.value.lat;
-      _lng = city.value.lng;
     } else {
-      _lat = location.lat;
-      _lng = location.lng;
+      lat = position.latitude;
+      lng = position.longitude;
     }
-    await _loadAll();
+    loadAll();
   }
 
-  Future<void> _loadAll() async {
+  Future<void> loadAll() async {
     weathers.clear();
-    events.value = await getEvents(_lat, _lng, radiusKm.value);
-    await loadWeather(focusedDay.value);
+    loadedMonths.clear();
+    events.value = await getEvents(lat, lng, radiusKm.value);
+    loadWeather(focusedDay.value); // no await, events do not wait for weather
   }
 
+  // loads this month and the next week's month, one call for each month
   Future<void> loadWeather(DateTime day) async {
+    await loadMonth(day);
+    await loadMonth(day.add(const Duration(days: 7)));
+  }
+
+  Future<void> loadMonth(DateTime day) async {
+    String key = '${day.year}-${day.month}';
+    if (loadedMonths.contains(key)) return; // already have it
+    loadedMonths.add(key);
     try {
-      final list = await getWeather(day, _lat, _lng);
-      weathers.addAll({for (final w in list) dayKey(w.date): w});
-    } catch (_) {
-      // no weather, the days show the "no forecast" icon
+      List<WeatherEntity> list = await getWeather(day, lat, lng);
+      for (WeatherEntity w in list) {
+        weathers[dayKey(w.date)] = w;
+      }
+    } catch (e) {
+      loadedMonths.remove(key); // try again next time
+    }
+  }
+
+  Future<void> rsvp(EventEntity event) async {
+    int index = events.indexWhere((e) => e.id == event.id);
+    EventEntity old = events[index];
+
+    // change the screen first
+    events[index] = old.copyWith(going: old.going + 1, isGoing: true);
+    try {
+      await rsvpEvent(old);
+    } catch (e) {
+      events[index] = old; // it failed, go back
+      Get.snackbar('Sorry', e is EventFullException ? 'Event is full' : 'Try again');
     }
   }
 
   List<EventEntity> eventsOf(DateTime day) {
     return events
-        .where(
-          (e) =>
-              e.start.year == day.year &&
-              e.start.month == day.month &&
-              e.start.day == day.day,
-        )
+        .where((e) => e.start.day == day.day && e.start.month == day.month)
         .toList();
   }
 
@@ -73,14 +96,14 @@ class EventController extends GetxController {
 
   void setRadius(int km) {
     radiusKm.value = km;
-    _loadAll();
+    loadAll();
   }
 
   void setCity(CityEntity newCity) {
     city.value = newCity;
-    _lat = newCity.lat;
-    _lng = newCity.lng;
-    _loadAll();
+    lat = newCity.lat;
+    lng = newCity.lng;
+    loadAll();
   }
 
   void onDaySelected(DateTime selected, DateTime focused) {
