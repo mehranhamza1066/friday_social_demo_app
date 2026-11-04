@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+
+import 'features/event/presentation/bindings/event_binding.dart';
+import 'features/event/presentation/screens/event_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,9 +18,10 @@ class MyApp extends StatelessWidget {
       designSize: const Size(375, 812),
       minTextAdapt: true,
       splitScreenMode: true,
-      builder: (context, child) => const MaterialApp(
+      builder: (context, child) => GetMaterialApp(
         debugShowCheckedModeBanner: false,
-        home: Scaffold(),
+        initialBinding: EventBinding(),
+        home: const EventScreen(),
       ),
     );
   }
