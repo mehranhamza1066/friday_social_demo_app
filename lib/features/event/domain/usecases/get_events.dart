@@ -6,5 +6,6 @@ class GetEvents {
 
   GetEvents(this.repository);
 
-  List<EventEntity> call(DateTime day) => repository.getEvents(day);
+  Future<List<EventEntity>> call(double lat, double lng, int radiusKm) =>
+      repository.getEvents(lat, lng, radiusKm);
 }

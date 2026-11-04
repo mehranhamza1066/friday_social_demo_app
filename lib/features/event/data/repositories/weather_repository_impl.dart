@@ -8,6 +8,10 @@ class WeatherRepositoryImpl implements WeatherRepository {
   WeatherRepositoryImpl(this.dataSource);
 
   @override
-  Future<List<WeatherEntity>> getWeather(DateTime from, DateTime to) =>
-      dataSource.getWeather(from, to);
+  Future<List<WeatherEntity>> getWeather(
+    DateTime from,
+    DateTime to,
+    double lat,
+    double lng,
+  ) => dataSource.getWeather(from, to, lat, lng);
 }

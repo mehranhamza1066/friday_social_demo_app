@@ -8,5 +8,6 @@ class EventRepositoryImpl implements EventRepository {
   EventRepositoryImpl(this.dataSource);
 
   @override
-  List<EventEntity> getEvents(DateTime day) => dataSource.getEvents(day);
+  Future<List<EventEntity>> getEvents(double lat, double lng, int radiusKm) =>
+      dataSource.getEvents(lat, lng, radiusKm);
 }

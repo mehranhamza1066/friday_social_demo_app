@@ -5,10 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../core/app_textstyles.dart';
+import '../../../../core/weather_icon.dart';
 import '../../../../utils/app_colors.dart';
+import '../../../event_detail/presentation/bindings/event_detail_binding.dart';
+import '../../../event_detail/presentation/screens/event_detail_screen.dart';
+import '../../domain/entities/city_entity.dart';
+import '../../domain/entities/event_entity.dart';
 import '../../domain/entities/weather_entity.dart';
 import '../controllers/event_controller.dart';
-import '../widgets/weather_icon.dart';
 
 class EventScreen extends GetView<EventController> {
   const EventScreen({super.key});
@@ -21,6 +25,7 @@ class EventScreen extends GetView<EventController> {
         child: Column(
           children: [
             _calendar(),
+            _filters(),
             Expanded(child: _dayDetails()),
           ],
         ),
@@ -31,6 +36,7 @@ class EventScreen extends GetView<EventController> {
   Widget _calendar() {
     return Obx(() {
       final weathers = Map.of(controller.weathers);
+      controller.events.length; // rebuild when the events change
       return TableCalendar(
         firstDay: DateTime(2020),
         lastDay: DateTime(2100),
@@ -52,13 +58,15 @@ class EventScreen extends GetView<EventController> {
               bottom: 2.h,
               child: Row(
                 children: [
-                  Text(
-                    '${events.length}',
-                    style: AppTextstyles.txt13w700.copyWith(
-                      color: AppColors.primaryBlue,
+                  if (events.isNotEmpty) ...[
+                    Text(
+                      '${events.length}',
+                      style: AppTextstyles.txt13w700.copyWith(
+                        color: AppColors.primaryBlue,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 2.w),
+                    SizedBox(width: 2.w),
+                  ],
                   Icon(
                     weatherIcon(code),
                     size: 14.r,
@@ -86,7 +94,6 @@ class EventScreen extends GetView<EventController> {
           ),
         ),
         calendarStyle: CalendarStyle(
-          outsideDaysVisible: false,
           cellMargin: const EdgeInsets.symmetric(horizontal: 2),
           defaultTextStyle: AppTextstyles.txt18w400,
           weekendTextStyle: AppTextstyles.txt18w400,
@@ -106,6 +113,107 @@ class EventScreen extends GetView<EventController> {
         ),
       );
     });
+  }
+
+  // the location box, tap it to change the distance (and the city)
+  Widget _filters() {
+    return Obx(() {
+      final place = controller.usingCity.value
+          ? controller.city.value.name
+          : 'Current location';
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        child: GestureDetector(
+          onTap: _openSheet,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: AppColors.powderSkyBlue),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 20.r,
+                  color: AppColors.primaryBlue,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  '$place · ${controller.radiusKm.value} km',
+                  style: AppTextstyles.txt14w700,
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 20.r,
+                  color: AppColors.primaryBlue,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  void _openSheet() {
+    Get.bottomSheet(
+      Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+        child: Padding(
+          padding: EdgeInsets.all(16.r),
+          child: Obx(() {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Distance',
+                  style: AppTextstyles.txt14w700.copyWith(
+                    color: AppColors.primaryBlue,
+                  ),
+                ),
+                for (final km in [5, 10, 25])
+                  _option('$km km', controller.radiusKm.value == km, () {
+                    controller.setRadius(km);
+                    Get.back();
+                  }),
+                // the user can only choose a city when the location is off
+                if (controller.usingCity.value) ...[
+                  SizedBox(height: 8.h),
+                  Text(
+                    'City',
+                    style: AppTextstyles.txt14w700.copyWith(
+                      color: AppColors.primaryBlue,
+                    ),
+                  ),
+                  for (final c in cities)
+                    _option(c.name, controller.city.value == c, () {
+                      controller.setCity(c);
+                      Get.back();
+                    }),
+                ],
+              ],
+            );
+          }),
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _option(String text, bool selected, VoidCallback onTap) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      onTap: onTap,
+      title: Text(text, style: AppTextstyles.txt13w700),
+      trailing: selected
+          ? const Icon(Icons.check, color: AppColors.primaryBlue)
+          : null,
+    );
   }
 
   Widget _dayDetails() {
@@ -133,13 +241,35 @@ class EventScreen extends GetView<EventController> {
             ],
           ),
           SizedBox(height: 8.h),
-          for (final event in events)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 4.h),
-              child: Text(event.title, style: AppTextstyles.txt13w700),
+          if (events.isEmpty)
+            Text(
+              'No events in ${controller.radiusKm.value} km',
+              style: AppTextstyles.txt13w700,
             ),
+          for (final event in events) _eventTile(event),
         ],
       );
     });
+  }
+
+  Widget _eventTile(EventEntity event) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      onTap: () => Get.to(
+        () => const EventDetailScreen(),
+        binding: EventDetailBinding(),
+        arguments: {
+          'event': event,
+          'weather': controller.weatherOf(event.start),
+        },
+      ),
+      title: Text(event.title, style: AppTextstyles.txt14w700),
+      subtitle: Text(
+        '${DateFormat('HH:mm').format(event.start)} · ${event.venue} · '
+        '${event.distanceKm.toStringAsFixed(1)} km',
+        style: AppTextstyles.txt13w700.copyWith(color: AppColors.lightGrey),
+      ),
+      trailing: const Icon(Icons.chevron_right),
+    );
   }
 }

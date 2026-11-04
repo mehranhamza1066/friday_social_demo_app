@@ -9,7 +9,7 @@ class GetWeather {
   // The weather of the 7 days (Monday to Sunday) that hold [day].
   // The weather API only answers for 90 days back and 15 days ahead,
   // so we cut the week to those days.
-  Future<List<WeatherEntity>> call(DateTime day) {
+  Future<List<WeatherEntity>> call(DateTime day, double lat, double lng) {
     final now = DateTime.now();
     var from = DateTime(day.year, day.month, day.day - (day.weekday - 1));
     var to = DateTime(from.year, from.month, from.day + 6);
@@ -18,6 +18,6 @@ class GetWeather {
     if (from.isBefore(first)) from = first;
     if (to.isAfter(last)) to = last;
     if (from.isAfter(to)) return Future.value([]);
-    return repository.getWeather(from, to);
+    return repository.getWeather(from, to, lat, lng);
   }
 }

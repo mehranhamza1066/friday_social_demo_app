@@ -1,5 +1,5 @@
 import '../entities/event_entity.dart';
 
 abstract class EventRepository {
-  List<EventEntity> getEvents(DateTime day);
+  Future<List<EventEntity>> getEvents(double lat, double lng, int radiusKm);
 }
