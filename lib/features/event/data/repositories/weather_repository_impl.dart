@@ -1,12 +1,13 @@
 import '../../domain/entities/weather_entity.dart';
 import '../../domain/repositories/weather_repository.dart';
-import '../data_source/weather_local_data_source.dart';
+import '../data_source/weather_remote_data_source.dart';
 
 class WeatherRepositoryImpl implements WeatherRepository {
-  final WeatherLocalDataSource dataSource;
+  final WeatherRemoteDataSource dataSource;
 
   WeatherRepositoryImpl(this.dataSource);
 
   @override
-  Future<List<WeatherEntity>> getWeather() => dataSource.getWeather();
+  Future<List<WeatherEntity>> getWeather(DateTime from, DateTime to) =>
+      dataSource.getWeather(from, to);
 }
