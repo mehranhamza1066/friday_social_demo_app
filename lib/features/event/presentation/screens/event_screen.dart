@@ -5,7 +5,9 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../core/app_textstyles.dart';
 import '../../../../utils/app_colors.dart';
+import '../../domain/entities/weather_entity.dart';
 import '../controllers/event_controller.dart';
+import '../widgets/weather_icon.dart';
 
 class EventScreen extends GetView<EventController> {
   const EventScreen({super.key});
@@ -15,18 +17,35 @@ class EventScreen extends GetView<EventController> {
     return Scaffold(
       backgroundColor: AppColors.softWhite,
       body: SafeArea(
-        child: Obx(
-          () => TableCalendar(
+        child: Obx(() {
+          final weathers = controller.weathers.toList();
+          return TableCalendar(
             firstDay: DateTime(2020),
             lastDay: DateTime(2100),
             focusedDay: controller.focusedDay.value,
-            rowHeight: 56.h,
+            rowHeight: 64.h,
             daysOfWeekHeight: 24.h,
             calendarFormat: CalendarFormat.week,
             availableCalendarFormats: const {CalendarFormat.week: 'Week'},
             startingDayOfWeek: StartingDayOfWeek.monday,
             selectedDayPredicate: (day) =>
                 isSameDay(day, controller.selectedDate.value),
+            eventLoader: (day) =>
+                weathers.where((w) => isSameDay(w.date, day)).toList(),
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, day, events) {
+                if (events.isEmpty) return null;
+                final weather = events.first as WeatherEntity;
+                return Positioned(
+                  bottom: 2.h,
+                  child: Icon(
+                    weatherIcon(weather.code),
+                    size: 14.r,
+                    color: AppColors.primaryBlue,
+                  ),
+                );
+              },
+            ),
             onDaySelected: controller.onDaySelected,
             onPageChanged: controller.onPageChanged,
             headerStyle: HeaderStyle(
@@ -63,8 +82,8 @@ class EventScreen extends GetView<EventController> {
                 border: Border.all(color: AppColors.blue50),
               ),
             ),
-          ),
-        ),
+          );
+        }),
       ),
     );
   }
