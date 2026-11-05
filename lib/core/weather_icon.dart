@@ -1,3 +1,7 @@
+// -- weather code -> icon and text
+// -- codes are from open-meteo (wmo codes)
+// -- null or unknown code = no forecast
+
 import 'package:flutter/material.dart';
 
 IconData weatherIcon(int? code) {

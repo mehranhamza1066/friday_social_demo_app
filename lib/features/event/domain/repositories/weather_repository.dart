@@ -1,3 +1,6 @@
+// -- contract for weather
+// -- get weather between two dates
+
 import '../entities/weather_entity.dart';
 
 abstract class WeatherRepository {

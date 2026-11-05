@@ -1,3 +1,6 @@
+// -- all text styles in one place
+// -- name = size + weight, txt14w700 is 14px bold
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';

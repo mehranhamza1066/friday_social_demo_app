@@ -1,3 +1,7 @@
+// -- app starts here
+// -- set screenutil design size (375x812)
+// -- EventBinding is the initial binding, EventScreen is home
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';

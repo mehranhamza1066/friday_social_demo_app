@@ -1,3 +1,6 @@
+// -- calls open-meteo api, no api key needed
+// -- one call = one date range (we send a month)
+
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;

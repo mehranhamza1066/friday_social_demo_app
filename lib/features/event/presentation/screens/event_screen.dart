@@ -1,3 +1,8 @@
+// -- main screen
+// -- week calendar with count + weather icon on each day
+// -- box to change distance/city (bottom sheet)
+// -- list of events of selected day, tap opens detail
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -98,7 +103,6 @@ class EventScreen extends GetView<EventController> {
     });
   }
 
-  // tap it to change the distance (and the city)
   Widget locationBox() {
     return Obx(() {
       String place = controller.usingCity.value ? controller.city.value.name : 'Current location';
@@ -141,7 +145,6 @@ class EventScreen extends GetView<EventController> {
                 title('Distance'),
                 for (int km in [5, 10, 25])
                   option('$km km', controller.radiusKm.value == km, () => controller.setRadius(km)),
-                // city only when the location is off
                 if (controller.usingCity.value) title('City'),
                 if (controller.usingCity.value)
                   for (CityEntity c in cities) option(c.name, controller.city.value == c, () => controller.setCity(c)),

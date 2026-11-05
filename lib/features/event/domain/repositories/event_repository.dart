@@ -1,3 +1,6 @@
+// -- contract for events
+// -- get events + rsvp
+
 import '../entities/event_entity.dart';
 
 abstract class EventRepository {

@@ -1,3 +1,7 @@
+// -- model made from api json
+// -- api gives list of dates + list of codes
+// -- we join them by index
+
 import '../../domain/entities/weather_entity.dart';
 
 class WeatherModel extends WeatherEntity {

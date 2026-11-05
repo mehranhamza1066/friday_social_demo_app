@@ -1,3 +1,7 @@
+// -- one day weather: date + code
+// -- code null = no forecast
+// -- dayKey is the key to find weather of a day
+
 class WeatherEntity {
   final DateTime date;
   final int? code; // null means no forecast

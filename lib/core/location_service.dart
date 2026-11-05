@@ -1,7 +1,10 @@
+// -- gets user location with geolocator
+// -- asks permission if denied
+// -- returns null on any problem, then app uses city list
+
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
-  // returns null if we can not get the location
   static Future<Position?> getUserLocation() async {
     try {
       LocationPermission permission = await Geolocator.checkPermission();

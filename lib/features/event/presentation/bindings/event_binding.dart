@@ -1,3 +1,7 @@
+// -- connects everything for event screen
+// -- data source -> repository -> use cases -> controller
+// -- lazyPut so controller is made when needed
+
 import 'package:get/get.dart';
 
 import '../../data/data_source/event_local_data_source.dart';

@@ -1,3 +1,6 @@
+// -- city with name, lat, lng
+// -- fixed list of cities for when location is off
+
 class CityEntity {
   final String name;
   final double lat;

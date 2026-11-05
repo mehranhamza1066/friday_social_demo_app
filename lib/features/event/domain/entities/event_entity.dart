@@ -1,3 +1,6 @@
+// -- event data used by the app
+// -- copyWith is used for rsvp (going + 1)
+
 class EventEntity {
   final String id;
   final String title;

@@ -1,3 +1,8 @@
+// -- state of event screen (getx)
+// -- start: get location, load events, then weather
+// -- weather loads month by month, loadedMonths stops repeat calls
+// -- rsvp changes screen first, goes back if it fails
+
 import 'package:get/get.dart';
 
 import '../../../../core/event_full_exception.dart';
@@ -60,7 +65,7 @@ class EventController extends GetxController {
 
   Future<void> loadMonth(DateTime day) async {
     String key = '${day.year}-${day.month}';
-    if (loadedMonths.contains(key)) return; // already have it
+    if (loadedMonths.contains(key)) return;
     loadedMonths.add(key);
     try {
       List<WeatherEntity> list = await getWeather(day, lat, lng);
@@ -76,12 +81,11 @@ class EventController extends GetxController {
     int index = events.indexWhere((e) => e.id == event.id);
     EventEntity old = events[index];
 
-    // change the screen first
     events[index] = old.copyWith(going: old.going + 1, isGoing: true);
     try {
       await rsvpEvent(old);
     } catch (e) {
-      events[index] = old; // it failed, go back
+      events[index] = old;
       Get.snackbar('Sorry', e is EventFullException ? 'Event is full' : 'Try again');
     }
   }
